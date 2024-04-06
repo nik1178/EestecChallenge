@@ -46,7 +46,7 @@ class PresentationGenerator:
         if brightness < 127:
             print("The background is dark, so the font color should be white.")
             split = self.instruction.split(".")
-            split.insert(1, "The background is dark, so the font color should be white.")
+            split.insert(1, "The background is dark, so the font color on all the slides should be white.")
             self.instruction = ".".join(split)
             
     
@@ -63,8 +63,8 @@ class PresentationGenerator:
         
         # Remove ``` from the start and end of the code`
         if message_text[0:3] == "```":
-            if message_text[0:6] == "```latex":
-                message_text = message_text[6:]
+            if message_text[0:8] == "```latex":
+                message_text = message_text[8:]
             else:
                 message_text = message_text[3:]
         if message_text.endswith == "```":
@@ -160,7 +160,3 @@ class PresentationGenerator:
         image_prompts = self.generate_image_prompts()
         self.generate_images(image_prompts)
         self.change_background()
-        
-
-generator = PresentationGenerator("Linearna regresija v slovenščini.", background_image_path="background.png")
-generator.generate_presentation()
