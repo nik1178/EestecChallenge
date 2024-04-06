@@ -1,3 +1,5 @@
+Weather: https://meteo.arso.gov.si/uploads/probase/www/observ/surface/text/sl/observationAms_si_latest.html
+
 Za reševanje tega izziva bi bil postopek naslednji:
 
 1. Zbiranje podatkov:
