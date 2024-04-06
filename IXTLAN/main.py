@@ -25,85 +25,90 @@ class PresentationGenerator:
         self.input_text = input_text
     
     def generate_latex_code(self):
-        conversation_messages.append({"role": "user", "content": input_text},)
-        response = client.chat.completions.create(
+        self.conversation_messages.append({"role": "user", "content": self.input_text},)
+        response = self.client.chat.completions.create(
             model="gpt-4-0125-preview",
-            messages=conversation_messages
+            messages=self.conversation_messages
         )
 
         message_text = response.choices[0].message.content
-        conversation_messages.append({"role": "assistant", "content": message_text})
+        self.conversation_messages.append({"role": "assistant", "content": message_text})
         
         # Remove ``` from the start and end of the code`
         
-        latex_path = os.path.join(presentation_folder, "presentation.tex")
+        latex_path = os.path.join(self.presentation_folder, "presentation.tex")
         if os.path.exists(latex_path):
             os.remove(latex_path)
 
         code_file =  open(latex_path, "a", errors="ignore")
         code_file.write(message_text)
-    
+        code_file.close()
+        
     def generate_image_prompts(self):
-        conversation_messages.append({"role": "system", "content": instructions_get_image_prompts},)
-        response = client.chat.completions.create(
+        self.conversation_messages.append({"role": "system", "content": instructions_get_image_prompts},)
+        response = self.client.chat.completions.create(
             model="gpt-4-turbo-preview",
-            messages=conversation_messages
+            messages=self.conversation_messages
         )
         
         message_text = response.choices[0].message.content
         return message_text
 
     def generate_images(self, image_prompts):
-        
+        buff = io.StringIO(image_prompts)
+
+        folder_path = os.path.join(self.presentation_folder, "images")
+        if os.path.exists(folder_path):
+            shutil.rmtree(folder_path)
+        os.makedirs(folder_path)
+
+        for line in buff:
+            if len(line) < 2:
+                continue
+            split = line.split(":")
+            image_name = split[0]
+            prompt = split[1].strip()
+            if prompt[0] == '{':
+                prompt = prompt[1:]
+            if prompt[-1] == '}':
+                prompt = prompt[:-1]
+            
+            
+            print("Current prompt: " + prompt)
+            
+            response = self.client.images.generate(
+                model="dall-e-3",
+                prompt=prompt,
+                size="1024x1024",
+                quality="hd",
+                n=1,
+            )
+
+            image_url = response.data[0].url
+            print("Generated: " + image_url)
+
+
+            with open(os.path.join(folder_path,image_name), 'wb') as handle:
+                response = requests.get(image_url, stream=True)
+
+                if not response.ok:
+                    print(response)
+
+                for block in response.iter_content(1024):
+                    if not block:
+                        break
+
+                    handle.write(block)
     
     def generate_presentation(self):
-        latex_code = generate_latex_code()
-        write_to_file("presentation.tex", latex_code)
-        image_prompts = generate_image_prompts()
-        generate_images(image_prompts)
+        
+        if os.path.exists(self.presentation_folder):
+            shutil.rmtree(self.presentation_folder)
+        os.makedirs(self.presentation_folder)
+        
+        self.generate_latex_code()
+        image_prompts = self.generate_image_prompts()
+        self.generate_images(image_prompts)
 
-print(response.choices[0].message.content)
-image_message = response.choices[0].message.content
-buff = io.StringIO(image_message)
-
-if os.path.exists("images"):
-    shutil.rmtree("images")
-os.makedirs("images")
-
-for line in buff:
-    if len(line) < 2:
-        continue
-    split = line.split(":")
-    image_name = split[0]
-    prompt = split[1].strip()
-    if prompt[0] == '{':
-        prompt = prompt[1:]
-    if prompt[-1] == '}':
-        prompt = prompt[:-1]
-    
-    
-    print("Current prompt: " + prompt)
-    
-    response = client.images.generate(
-        model="dall-e-3",
-        prompt=prompt,
-        size="1024x1024",
-        quality="hd",
-        n=1,
-    )
-
-    image_url = response.data[0].url
-    print("Generated: " + image_url)
-
-
-    with open('images/'+image_name, 'wb') as handle:
-        response = requests.get(image_url, stream=True)
-
-        if not response.ok:
-            print(response)
-
-        for block in response.iter_content(1024):
-            if not block:
-                break
-
-            handle.write(block)
+generator = PresentationGenerator("The quick brown fox jumps over the lazy dog.")
+generator.generate_presentation()
