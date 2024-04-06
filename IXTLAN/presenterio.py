@@ -116,7 +116,7 @@ def main(page: ft.Page):
 
     global t
     t = ft.Text()
-    tb1 = ft.TextField(label="User input", multiline=True, max_lines=10)
+    tb1 = ft.TextField(label="User input", multiline=True, max_lines=10, max_length = 120000)
     b = ft.ElevatedButton(text="Submit", on_click=text_button_clicked, bgcolor=ft.colors.INDIGO_50)
 
 
