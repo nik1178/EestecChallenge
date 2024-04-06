@@ -1,10 +1,10 @@
 import flet as ft
 
 t=""
-# opcija a Å¾elimo txt 
+# opcija a zelimo txt 
 #optiontxt = 1
 
-opcija = 0
+
 # 0 = topic
 # 1 = script
 # 2 = prov like seminarska -> article
@@ -27,17 +27,27 @@ def main(page: ft.Page):
             #print(optiontxt)
     """
 
+    text = ft.Text()
+    text.value = "Please enter the topic you would like to present:"
+    text.size = 20
+
     def zamejajopcijo0(e):
-        global opcija
-        opcija = 0
+        text.value = "Please enter the topic you would like to present:"
+        page.update()
     
     def zamejajopcijo1(e):
-        global opcija
-        opcija = 1
+        text.value = "Please enter the script you would like to present:"
+        page.update()
 
     def zamejajopcijo2(e):
-        global opcija
-        opcija = 2
+        text.value = "Please enter the article you would like to present:"
+        page.update()
+
+    def izpisi(e):
+        global text_to_present
+        return text_to_present
+    
+
 
     page.title = "Text custom styles"
     page.scroll = "adaptive"
@@ -55,6 +65,7 @@ def main(page: ft.Page):
         )
     )
 
+    global opcija
 
     page.add(
         ft.Row(
@@ -99,11 +110,8 @@ def main(page: ft.Page):
             alignment=ft.MainAxisAlignment.CENTER,
         ),
     )
-    
-    page.add(ft.Text(
-            "Which of the following do you already have?",
-            size=20, text_align=ft.TextAlign.NONE
-    ))
+
+    page.add(text)
 
 
     global t
