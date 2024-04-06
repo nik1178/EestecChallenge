@@ -1,0 +1,961 @@
+First homework assignment:
+Optimal orthogonal transformation
+Nik Jeniˇc
+April 2024
+Mathematical Modeling
+1
+Contents
+1 Problem description 3
+2 Model description 4
+3 Optimal orthogonal transformation 5
+3.1 Naive solution . . . . . . . . . . . . . . . . . . . . . . . . . . . 5
+3.1.1 Derivation . . . . . . . . . . . . . . . . . . . . . . . . . 5
+3.1.2 Naive method implementation . . . . . . . . . . . . . . 8
+3.1.3 Testing . . . . . . . . . . . . . . . . . . . . . . . . . . . 10
+4 Kabsch algorithm 13
+4.0.1 Algorithm . . . . . . . . . . . . . . . . . . . . . . . . . 13
+4.0.2 Kabsch method implementation . . . . . . . . . . . . . 16
+4.0.3 Testing . . . . . . . . . . . . . . . . . . . . . . . . . . . 19
+5 Comparing results 21
+6 Conclusion 22
+7 References 23
+8 Appendix 24
+8.1 Naive method full implementation . . . . . . . . . . . . . . . . 24
+8.2 Kabsch method full implementation . . . . . . . . . . . . . . . 26
+Listings
+1 Octave implementation of the naive method . . . . . . . . . . 8
+2 Third test generation method . . . . . . . . . . . . . . . . . . 11
+3 Octave implementation of the Kabsch method . . . . . . . . . 16
+4 Relative rotation error checking . . . . . . . . . . . . . . . . . 17
+List of Figures
+1 Points X and Y in the first test . . . . . . . . . . . . . . . . . 10
+2 Second test points after transformation with naive method . . 11
+3 Second test points after transformation with Kabsch method . 20
+2
+1 Problem description
+In many different fields of work, such as computer graphics, cheminformatics
+and bioinformatics [1], it is often necessary to find a transformation that
+minimizes the distance between two sets of points stretching, only rotation
+and translation. Simply put, how can we rotate, then move a solid, described
+with points, from one position to another in just two steps.
+This type of transformation is known as the optimal orthogonal transformation [3]. In this homework assignment, I will present two solutions to
+this problem, as well as a coded implementation of both in the programming
+language Octave. [4]
+3
+2 Model description
+Before we present the two methods for solving the problem, we need to define
+the mathematical model that we will use.
+We will represent the two sets of points as matrices, where each column
+represents a point.
+The first set of points, or coordinates, will be represented by the matrix
+X and the second set of points by the matrix Y . The goal is to find the
+optimal orthogonal transformation that minimizes the distance between the
+two sets of points. Put simply, we will find the rotation and translation, that
+moves the first set of points to the second set of points.
+The rotation will be represented by the matrix Q and the translation by
+the vector ⃗b.
+[5]
+The basic formula for the transformation is:
+Y = QX +⃗b
+We can interpret this formula as: To get to the second set of coordinates,
+we must first rotate the coordinates, or points, stored in the matrix X by
+the matrix Q, and then move them by the vector ⃗b. [5]
+Something worth pointing out, is that since Q is a rotational matrix, it
+is orthogonal. [6]
+4
+3 Optimal orthogonal transformation
+In the beginning, I will present what could be considered the naive solution
+to this problem, which is based on the linear least squares method. The
+second method I will present is the Kabsch algorithm, which is more efficient
+and is widely used in practice. [1] [2]
+3.1 Naive solution
+This method is simpler to derive, but it is not as efficient and accurate as
+the second method.
+The goal of this method is to minimize the distance between the two
+sets of points, which can be represented as the sum of the squared distances
+between the corresponding points. [5]
+3.1.1 Derivation
+The formulas that define our problem are:
+Y = QX +⃗b
+Q
+TQ = I
+We notice, that the second equation is non linear, so we choose to ignore
+it, and only focus on the first. Deriving with both equations would lead to
+a non-linear least squares problem[7], which is much harder to solve. This
+leads to a change in equation and unknown count. Using both equations we
+would have kn + k
+2
+equations and k
+2 + k unknows. Choosing to ignore the
+second equation, we get kn equations and k
+2 +k unknowns. This leads to us
+needing more points to solve the problem, but the problem is much easier to
+solve. [5]
+Since we are trying to solve the linear least squares problem[7], we want
+to write the above equation in the form:
+Ax = b
+where A is a matrix of parameters, x is the vector of unknowns, and b is the
+vector of results. [7]
+First, to simplify the problem, we start by focusing on a single point, and
+then generalize the solution to all points.
+The new equation is:
+yi = Qxi +⃗b
+5
+where yi and xi are the i-th columns of the matrices Y and X respectively.
+First we calculate Qxi +⃗b:
+
+
+
+
+
+q11 q12 . . . q1k
+q21 q22 . . . q2k
+.
+.
+.
+qk1 qk2 . . . qkk
+
+
+
+
+
+·
+
+
+
+
+
+xi1
+xi2
+.
+.
+.
+xik
+
+
+
+
+
++
+
+
+
+
+
+b1
+b2
+.
+.
+.
+bk
+
+
+
+
+
+=
+
+
+
+
+
+q11xi1 + q12xi2 + · · · + q1kxik
+q21xi1 + q22xi2 + · · · + q2kxik
+.
+.
+.
+qk1xi1 + qk2xi2 + · · · + qkkxik
+
+
+
+
+
++
+
+
+
+
+
+b1
+b2
+.
+.
+.
+bk
+
+
+
+
+
+=
+
+
+
+
+
+q11xi1 + q12xi2 + · · · + q1kxik + b1
+q21xi1 + q22xi2 + · · · + q2kxik + b2
+.
+.
+.
+qk1xi1 + qk2xi2 + · · · + qkkxik + bk
+
+
+
+
+
+Looking at this matrix we notice, that each row contains the same xi coordinates, the only difference being the qij . This means that we can expose xi
+as a vector multiplication. But the final ”column” contains the elements of
+the vector b. This isn’t an issue though, since we can just multiply bi with
+the vector 1. This means that we can write the above equation as:
+
+
+
+
+
+q11 q12 . . . q1k b1
+q21 q22 . . . q2k b2
+.
+.
+.
+qk1 qk2 . . . qkk bk
+
+
+
+
+
+·
+
+
+
+
+
+
+
+xi1
+xi2
+.
+.
+.
+xik
+1
+
+
+
+
+
+
+
+or in short:
+h
+Q ⃗b
+i
+·
+
+xi
+1
+
+= yi
+We quickly notice, that the above equation is close to the form we want to
+solve, that being A⃗x = ⃗y, the difference being that our parameters are in
+the form of a vector, which can’t switch sides. This problem fixes itself, if
+we generalize the above equation to all points. This works because matrix
+multiplication works on columns, and the above equation is a column-wise
+operation. The new equation is:
+h
+Q ⃗b . . .
+⃗b
+i
+·
+
+x1 x2 . . . xn
+1 1 . . . 1
+
+=
+
+y1 y2 . . . yn
+
+6
+or in short:
+h
+Q ⃗b
+i
+·
+
+X
+1
+
+= Y
+Taking the Moore Penrose pseudoinverse[8] of the matrix on the left side, we
+get:
+h
+Q ⃗b
+i
+= Y ·
+
+X
+1
++
+With this, we can easily calculate the matrix Q and the vector ⃗b.
+7
+3.1.2 Naive method implementation
+Since we have derived a single simple formula, the implementation is quite
+simple. This will be done in the programming language Octave[4], but the
+same code can be used in Matlab.
+The code is as follows:
+1 function [Q , b ] = naive (X , Y )
+2
+3 [~ , colnum ]= size ( X ) ;
+4 vectorOfOnes = ones ([1 colnum ]) ;
+5 X = [ X ; vectorOfOnes ];
+6
+7 Qb = Y * pinv ( X ) ;
+8
+9 Q = Qb (: ,1:( end -1) ) ;
+10 b = Qb (: , end) ;
+11
+12 [Q , R ] = qr( Q ) ;
+13
+14 for i = 1: length ( R )
+15 if R (i , i ) < 0
+16 Q (: , i ) = Q (: , i ) .*( -1) ;
+17 end
+18 end
+19 end
+20
+Listing 1: Octave implementation of the naive method
+This is the truncated version of the code, the full version can be found in the
+appendix.
+The first line of the code is just a function declaration, so that we can
+call the function later. We also define the input parameters, which are the
+matrices X and Y , and the output parameters, which are the matrices Q
+and the vector ⃗b.
+Our first goal is to add a row of ones to the matrix X, so that we can calculate
+the vector ⃗b as well. This is done in these lines:
+1 [~ , colnum ]= size ( X ) ;
+2 vectorOfOnes = ones ([1 colnum ]) ;
+3 X = [ X ; vectorOfOnes ];
+The first line calculates the number of columns in the matrix X, and the
+second line creates a row vector of ones, with the same number of elements
+as there are columns in the matrix X. The third line appends the row vector
+to the matrix X. With this, we have made the matrix 
+X
+1
+
+.
+8
+Next, we get the matrix’s pseudoinverse with the built-in function pinv(),
+and multiply it with the matrix Y :
+1 Qb = Y * pinv ( X ) ;
+With one command, we already have the matrix Q and the vector ⃗b, but
+they are combined into a single matrix. We separate them in the next lines:
+1 Q = Qb (: ,1:( end -1) ) ;
+2 b = Qb (: , end) ;
+With this, we have the matrix Q and the vector ⃗b, but the matrix Q is not
+necessarily orthogonal. To fix this, we use the QR decomposition, and then
+check if the diagonal elements of the matrix R are negative. If they are, we
+multiply the corresponding column of the matrix Q by −1. This is done due
+to the fact that the QR decomposition is not unique, and the sign of the
+diagonal elements of the matrix R can be either positive or negative. This is
+done in the following lines:
+1 [Q , R ] = qr( Q ) ;
+2
+3 for i = 1: length ( R )
+4 if R (i , i ) < 0
+5 Q (: , i ) = Q (: , i ) .*( -1) ;
+6 end
+7 end
+Now we finally have the orthogonal matrix Q and the vector ⃗b, which are the
+results of the naive method.
+[10]
+9
+3.1.3 Testing
+Now that we have the implementation, we can easily test and visualize it.
+To test our method, we first need to generate some points and their
+rotations and translations, as well as some approximate transformations, so
+we can test the least squares method[7].
+Test 1
+The first set of points will be the simplest:
+X =
+
+0 −2 −1
+0 1 3 
+Y =
+
+1 2 2
+0 2 1
+Visualizing these points, we get the following plot:
+Figure 1: Points X and Y in the first test
+In the given image, the blue points represent X, and the red points represent
+Y .
+We can see that it’s a simple 90° rotation and a translation of 1 in the
+x direction. Inputing these points into our function, we get the following
+results:
+Q =
+
+0 1
+−1 0
+⃗b =
+
+1
+0
+
+This aligns with our observations, and we can conclude that the naive method
+works on simple accurate transformations.
+Test 2
+10
+The second set of points is equal to the first, except we nudge one of the yi
+coordinates by 0.1. This will test the robustness of our method.
+X =
+
+0 −2 −1
+0 1 3 
+Y =
+
+1 2 2
+0 2 1.1
+
+Inserting this into Octave, we get the following results:
+Q =
+
+0 1
+−1 0
+⃗b =
+
+1
+0
+
+Looking closely, we notice the same results as before. This is due to two
+facts: The first is, that the naive method is not robust, and the second is,
+that the change is very small, so it cannot easily be displayed. Ploting the
+change, we get the following plot:
+Figure 2: Second test points after transformation with naive method
+We notice that the undisturbed points align perfectly, but the disturbed point
+is slightly off.
+Test 3
+The final test is done on a larger set of points. To do this efficiently, we need
+a method to generate random points, and their transformations. To do this,
+we will be using our original formula: Y = QX +⃗b. This formula tells us,
+that if we generate a random matrix Q, making sure it is orthogonal, and a
+random vector ⃗b, we can generate random points, and their transformations.
+This is done in the following code:
+1 Q = rand (10 ,30) ;
+2 Q = orth ( Q ) ;
+3 b = rand (10 ,1) ;
+4 X = rand (10 ,30) ;
+5 Y = Q * X + b ;
+Listing 2: Third test generation method
+11
+Putting X and Y into our function, we get the same Q and ⃗b that were
+used to calculate Y , which means that our method works on larger sets of
+accurately rotated points as well.
+[5] [10] [11]
+12
+4 Kabsch algorithm
+The Kabsch algorithm is the industry standard for solving the optimal orthogonal transformation problem. It is more efficient and accurate than the
+naive method, and is widely used in practice. Due to this, it is well documented and has many implementations in various programming languages,
+meaning we don’t have to derive the solution ourselves. [1] [2]
+4.0.1 Algorithm
+The Kabsch algorithm explains the rotation of points relative to the center
+of mass of the points. To get the center of mass, we first need the mean of
+both sets of points. This is done with the following formulas:
+x =
+1
+n
+Xn
+i=1
+xi and y =
+1
+n
+Xn
+i=1
+yi
+Next, we calculate the relative position of each point to the center of mass:
+x
+′
+i = xi − x and y
+′
+i = yi − y
+Putting the individual relative points together, we get the matricies X′ =
+[x
+′
+1
+, . . . , x′
+n
+] and Y
+′ = [y
+′
+1
+, . . . , y′
+n
+] for all i = 1, . . . , n.
+It’s now clearer how these will aid with the rotation matrix Q:
+Y
+′ = QX′
+Now we calculate the covariance matrix. The covariance matrix will be used
+to calculate the rotation matrix Q:
+C = X
+′Y
+′T
+The next step is to calculate the singular value decomposition of the covariance matrix C:
+C = UΣV
+T
+Then we calculate the matrix D:
+D =
+
+
+
+
+
+1 . . . 0 0
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+0 . . . 1 0
+0 . . . 0 d
+
+
+
+
+
+where d is equal to 1 or -1, matching the sign of either det(C) or det(V UT
+).
+13
+Finally, we calculate the rotation matrix Q:
+Q = V DUT
+The final step is to calculate the translation vector ⃗b, which we can easily do
+by flipping a modified version of our original formula:
+⃗b = y − Qx
+[5]
+Sign of d
+An interesting observation one might have made in the previous section, is
+that the sign of d could be acquired from either det(C) or det(V UT
+). This
+means that the sign of both should be equal.
+Proof that sign of det(C) = sign of det(V UT
+)
+Let’s start with the derivation, then explain the equations:
+C = USV T
+(1)
+det(C) = det(USV T
+) (2)
+det(C) = det(U)det(S)det(V
+T
+) (3)
+sign of det(C) = sign of det(U)det(S)det(V
+T
+) (4)
+sign of det(C) = sign of det(U)det(V ) (5)
+The first equation is the singular value decomposition of the matrix C.
+Since C is equal to its singular value decomposition, the determinants will
+also be equal, which we see in the second equation.
+In the third equation we utilize the determinant of a product theorem, stating
+that a determinant of a product of matricies, is the same as the product of
+the determinants of those matricies. [12]
+In the fourth equation we state that, since the values of both sides are still
+equal, the signs of both sides will also be equal.
+In the fifth and final equation, we remove the determinant of S. We can
+do this, since the matrix S is a diagonal matrix containing only the roots
+of the eigenvalues of CCT
+. This ensures that the elements of S will always
+be positive, meaning that the determinant of S will also always be positive.
+14
+Basic math tells us that multiplying anything with a positive value will not
+change the sign of the result, so we can safely remove the determinant of S.
+This proves that the sign of det(C) is equal to the sign of det(U)det(V ),
+which is the same as the sign of det(V UT
+), meaning we can safely take the
+sign of either for determining the sign of d.
+15
+4.0.2 Kabsch method implementation
+Even though the theory behind the Kabsch method is more complex than
+the naive method, the implementation is still quite simple, due to the built-in
+functions in Octave [4] [10].
+The code is as follows:
+1 function [Q , b ] = kabsch (X , Y )
+2
+3 x_avg = mean (X ,2) ;
+4 y_avg = mean (Y ,2) ;
+5
+6 Xrelative = X - x_avg ;
+7 Yrelative = Y - y_avg ;
+8
+9 C = Yrelative * Xrelative ’;
+10
+11 [U ,S , V ] = svd( C ) ;
+12
+13 D = eye( length ( S ) ) ;
+14 Cdeterminant = det ( C ) ;
+15 if Cdeterminant < 0
+16 D (end ,end) = -1;
+17 end
+18
+19 Q = U * D *V ’;
+20
+21 for i = 1: length ( Xrelative )
+22 calculatedY = Q * Xrelative (: , i ) ;
+23 expectedY = Yrelative (: , i ) ;
+24 if calculatedY ~= expectedY
+25 calculatedY ;
+26 expectedY ;
+27 end
+28 end
+29
+30 b = y_avg - Q * x_avg ;
+31
+32 end
+Listing 3: Octave implementation of the Kabsch method
+After declaring the function, the first thing we do is calculate the mean for
+every dimension of each vector containing the coordinates of each point. This
+is done in the following lines:
+1 x_avg = mean (X ,2) ;
+2 y_avg = mean (Y ,2) ;
+16
+This is made easy by the built-in function mean(), which, when given the
+parameter 2, calculates the mean of each row of the passed matrix.
+Next, we calculate the relative position of each point to the center of mass.
+This is done in the following lines, where we simply subtract the center of
+mass vectors xavg and yavg from each column in the matrices X and Y :
+1 Xrelative = X - x_avg ;
+2 Yrelative = Y - y_avg ;
+After that, we calculate the covariance matrix C and its singular value decomposition. Instead of doing this manually, we use the built-in function
+svd(), which greatly simplifies the process:
+1 C = Yrelative * Xrelative ’;
+2 [U ,S , V ] = svd( C ) ;
+Next, we calculate the matrix D and the determinant of the matrix C. If
+the determinant of the matrix C is negative, we set the last element of the
+matrix D to −1:
+1 D = eye( length ( S ) ) ;
+2 Cdeterminant = det ( C ) ;
+3 if Cdeterminant < 0
+4 D (end ,end) = -1;
+5 end
+We can now calculate the rotation matrix Q:
+1 Q = U * D *V ’;
+Skipping the error checking, we calculate the translation vector ⃗b:
+1 b = y_avg - Q * x_avg ;
+We have now calculated the rotation matrix Q and the translation vector ⃗b
+using the Kabsch algorithm.
+But before we move on to testing, we wish to check if the rotation matrix
+Q really rotates the relative points X′
+to the relative points Y
+′
+. This is done
+in the following lines:
+1 for i = 1: length ( Xrelative )
+2 calculatedY = Q * Xrelative (: , i ) ;
+3 expectedY = Yrelative (: , i ) ;
+4 if calculatedY ~= expectedY
+5 calculatedY ;
+17
+6 expectedY ;
+7 end
+8 end
+Listing 4: Relative rotation error checking
+Here we first calculate the calculated point y
+′
+i by multiplying the rotation
+matrix Q with the relative point x
+′
+i
+. We then compare the calculated point
+with the given point yi
+. If they are not equal, we print both points to the
+console.
+In practice we find, that these two points are rarely equal. This can be
+explained in two ways.
+The first is that the points are not equal due to floating point errors. This
+is due to the fact that floating point numbers are not infinitely precise, and
+the more operations we do, the more errors we accumulate. This is why we
+rarely compare floating point numbers directly, but instead compare them
+with a small margin of error.
+The second reason is that the input points are not perfectly rotated and
+translated, but are instead approximations. With the Kabsch algorithm, we
+are trying to find the best possible rotation and translation, meaning the
+best possible approximation.
+[5] [10]
+18
+4.0.3 Testing
+Now that we have the implementation, we can test and visualize the algorithm.
+For this we will use the same points as in the naive method, and the same
+tests.
+Test 1
+X =
+
+0 −2 −1
+0 1 3 
+Y =
+
+1 2 2
+0 2 1
+The results are as follows:
+Q =
+
+0 1
+−1 0
+⃗b =
+
+1
+0
+
+This is the same result as the naive method, which is expected, since the
+points are the same and the transformation is simple.
+Test 2
+The second test again has the same points as the first, with a minor offset:
+X =
+
+0 −2 −1
+0 1 3 
+Y =
+
+1 2 2
+0 2 1.1
+
+The results are as follows:
+Q =
+
+0.024992 0.999688
+−0.999688 0.024992
+⃗b =
+
+1.0254
+3.2277e − 04
+Surprisingly or not, the results are different from the naive method. Is this
+a mistake? Let’s first visualize the results:
+We can see that the points are still very close to each other. We make the
+observation that they rotated points are more uniformly spaced away from
+the points of matrix Y , instead of having one outlier. This may often be
+more preferable, since it is more robust.
+Test 3
+Using the same points generated using the procedure described in the naive
+method, we get very surprising results.
+Due to their size, I will not be displaying them here, but the results failed
+our original testing method. The matrix Q and vector ⃗b were not equal to
+the ones used to generate the points, thus failing the test.
+19
+Figure 3: Second test points after transformation with Kabsch method
+After investigation, I found that the matrix Q and vector ⃗b were not incorrect,
+but the Kabsch algorithm simply found a different approximation, thus our
+previous testing method was flawed.
+Changing the testing method from comparing the matrix Q and vector ⃗b
+used to compare the results, to instead comparing the norm of the difference
+between the generated points and the rotated and translated points, we get
+the following testing method:
+1 assert ( norm ([ x , y ]) - norm ([ x , Q * x + b ]) <norm ( x ) /1000)
+Here we compare the norms of the generated points and the rotated and
+translated points. If the difference is less than 0.1% of the norm of the
+generated points, we consider the test passed. We could have used a smaller
+margin of error, but this is sufficient for our purposes.
+This proves to be a much more robust testing method, and the Kabsch algorithm passes the test.
+[11]
+20
+5 Comparing results
+Comparing the results presented in the previous section, we can see that
+both the naive and Kabsch methods work well on both simple and bigger
+transformations. The Kabsch method often gives us alternative solutions,
+which might be more robust, but not necessarily more accurate.
+Not presented in the previous section, but worth mentioning, is the
+fact that the naive method sometimes misses completely, while the Kabsch method always finds a solution. This could be explained in many ways,
+but the most obvious might be the fact, that the Kabsch method has more
+equations to solve, while having the same amount of unknowns, thus making
+it easier to find better solutions.
+If given the choice, the Kabsch method is the better choice, due to the
+fact it often finds a better solution.
+[1] [2]
+21
+6 Conclusion
+In this homework assignment, we presented two methods for solving the
+optimal orthogonal transformation problem. The naive method is simple to
+derive and implement, but is not as accurate or robust as the Kabsch method.
+The Kabsch method is more complex, but is more accurate and robust, and
+is widely used in practice.
+To get better reading comphrension, we first explained both methods,
+and then presented the mathematical model for the problem. We then also
+arrived at the code implementation for both methods, and tested them on
+simple and more complex transformations.
+Explaining both methods before implementation was done to give the
+reader a better understanding of the problem, and to make the implementation easier to understand, and gave me a better understanding of the problem,
+as well as the solutions.
+During testing, we found that having enough tests is crucial. We also
+realized that making sure the testing method is adequate can change the
+perceived performance, thus it is a really important factor in comparing
+solutions.
+Ultimately, we came to the conclusion, that the Kabsch method is the
+better choice, even if it might require more knowledge and time to implement.
+22
+7 References
+References
+[1] Dalke Scientific: http://www.dalkescientific.com/writings/diary/
+archive/2010/11/13/ontologies_and_algorithms.html
+[2] Toumas Siipola:
+https://zpl.fi/aligning-point-patterns-with-kabsch-umeyama-algorithm/
+[3] Cambridge University Press: https://assets.cambridge.org/
+97805215/16884/frontmatter/9780521516884_frontmatter.pdf
+[4] Octave: https://octave.org/
+[5] Optimal orthogonal transformation - First homework assignment - School
+document
+[6] Math Stack Exchange:
+https://math.stackexchange.com/questions/612936/
+why-are-orthogonal-matrices-generalizations-of-rotations-and-reflections
+[7] Cuemath: https://www.cuemath.com/data/least-squares/
+[8] UCLA mathematics: https://www.math.ucla.edu/~laub/33a.2.12s/
+mppseudoinverse.pdf
+[9] Matlab: https://www.mathworks.com/products/matlab.html
+[10] MathWorks Help Center: https://www.mathworks.com/help/
+matlab/index.html?s_tid=hc_panel
+[11] Octave - Tests: https://wiki.octave.org/Tests
+[12] LibreTexts: https://math.libretexts.org/Bookshelves/Linear_
+Algebra/A_First_Course_in_Linear_Algebra_(Kuttler)/03%3A_
+Determinants/3.02%3A_Properties_of_Determinants
+23
+8 Appendix
+8.1 Naive method full implementation
+1 function [Q , b ] = naive (X , Y )
+2 % NAIVE - Naive solution to Qx + b = y
+3 % Naive algorithm to find how to move a solid described
+with points doing
+4 % a rotation and translation , where x is a matrix of column
+vectors
+5 % describing the starting position of all points , y is a
+matrix of column
+6 % vectors describing the ending position of all points , Q
+is a square
+7 % rotation matrix and b is a translation vector ,
+8 % giving us the equation Qx + b = y
+9
+10 % Get the number of column vectors , aka. the number of
+points , so we
+11 % know how many ones to append
+12 [~ , colnum ]= size ( X ) ;
+13
+14 % Create a vector of ones to append to X
+15 vectorOfOnes = ones ([1 colnum ]) ;
+16 X = [ X ; vectorOfOnes ];
+17
+18 % Calculate the matrix combined [Q|b] = Y*X+
+19 Qb = Y * pinv ( X ) ;
+20
+21 % Seperate the matrix Q and vector b
+22 Q = Qb (: ,1:( end -1) ) ;
+23 b = Qb (: , end) ;
+24
+25 % Fix the matrix Q with QR decomposition
+26 [Q , R ] = qr( Q ) ;
+27
+28 % Check if diagonal element in R is negative . If it is ,
+flip the sign
+29 % for the corresponding column in Q
+30 for i = 1: length ( R )
+31 if R (i , i ) < 0
+32 Q (: , i ) = Q (: , i ) .*( -1) ;
+33 end
+34 end
+35
+36 end
+37
+38 %! test
+24
+39 %! x = [0 , 0; -2 , 1; -1 , 3]; y = [1 , 0; 2 , 2; 4 ,1];
+40 %! [Q,b] = naive (x’ ,y ’);
+41 %! expectedQ = [0 1; -1 0];
+42 %! expectedb = [1; 0];
+43 %! assert (Q, expectedQ , 10^ -14) ;
+44 %! assert (b, expectedb , 10^ -14) ;
+45
+46 %! test
+47 %! x = [0 , 0; -2 , 1; -1 , 3]; y = [1 , 0; 2 , 2; 4 , 1.1];
+48 %! [Q,b] = naive (x’ ,y ’);
+49 %! expectedQ = [0 1; -1 0];
+50 %! expectedb = [1; 0];
+51 %! assert (Q, expectedQ , 10^ -14) ;
+52 %! assert (b, expectedb , 10^ -14) ;
+53
+54 % Third test in the main document
+25
+8.2 Kabsch method full implementation
+1 function [Q , b ] = kabsch (X , Y )
+2 % KABSCH - Kabsch algorithm for Qx + b = y
+3 % Algorithm to find how to move a solid described with
+points doing
+4 % a rotation and translation , where x is a matrix of column
+vectors
+5 % describing the starting position of all points , y is a
+matrix of column
+6 % vectors describing the ending position of all points , Q
+is a square
+7 % rotation matrix and b is a translation vector ,
+8 % giving us the equation Qx + b = y
+9
+10 % Get the average of each row in X and Y, meaning get the
+mean of
+11 % each coordinate space . This gives us the center of mass
+12 x_avg = mean (X ,2) ;
+13 y_avg = mean (Y ,2) ;
+14
+15 % Get the position of each point based on the center of
+mass
+16 Xrelative = X - x_avg ;
+17 Yrelative = Y - y_avg ;
+18
+19 % kxk covariance matrix
+20 C = Yrelative * Xrelative ’;
+21
+22 % SVD of C
+23 [U ,S , V ] = svd( C ) ;
+24
+25 % Replacing S with matrix D, which is an identity matrix ,
+26 % but the sign of the last element is based on the sign
+of
+27 % the determinant of C
+28 D = eye( length ( S ) ) ;
+29 Cdeterminant = det ( C ) ;
+30 if Cdeterminant < 0
+31 D (end ,end) = -1;
+32 end
+33
+34 % Calculate Q
+35 Q = U * D *V ’
+36
+37 % Check if Q*x{i} relative = y{i} relative
+38 for i = 1: length ( Xrelative )
+39 calculatedY = Q * Xrelative (: , i ) ;
+40 expectedY = Yrelative (: , i ) ;
+26
+41 if calculatedY ~= expectedY
+42 calculatedY ;
+43 expectedY ;
+44 end
+45 end
+46
+47 % Calculate b
+48 b = y_avg - Q * x_avg ;
+49
+50 end
+51
+52 %! test
+53 %! x = [0 , 0; -2 , 1; -1 , 3]; y = [1 , 0; 2 , 2; 4 ,1];
+54 %! [Q,b] = kabsch (x’ ,y ’);
+55 %! expectedQ = [0 1; -1 0];
+56 %! expectedb = [1; 0];
+57 %! assert (Q, expectedQ , 10^ -14) ;
+58 %! assert (b, expectedb , 10^ -14) ;
+59
+60 %! test
+61 %! x = [0 , 0; -2 , 1; -1 , 3]; y = [1 , 0; 2 , 2; 4 , 1.1];
+62 %! [Q,b] = kabsch (x’ ,y ’);
+63 %! expectedQ = [0.024992 0.999688; -0.999688 0.024992];
+64 %! expectedb = [1.0254; 3.2277e -04];
+65 %! assert (Q, expectedQ , 10^ -5);
+66 %! assert (b, expectedb , 10^ -5);
+67
+68 % Third test in the main document
+27
