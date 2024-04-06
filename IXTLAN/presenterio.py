@@ -8,7 +8,6 @@ option = 0
 # 1 = script
 # 2 = prov like seminarska -> article
 
-
 def main(page: ft.Page):
     def text_button_clicked(e):
         t.value = f'{tb1.value}'
@@ -34,19 +33,19 @@ def main(page: ft.Page):
     text.size = 20
 
 
-    def zamejajopcijo0(e):
+    def zamenjaj_opcijo0(e):
         global option
         text.value = "Please enter the topic you would like to present:"
         option = 0
         page.update()
     
-    def zamejajopcijo1(e):
+    def zamenjaj_opcijo1(e):
         global option
         option = 1
         text.value = "Please enter the script you would like to present:"
         page.update()
 
-    def zamejajopcijo2(e):
+    def zamenjaj_opcijo2(e):
         global option
         option = 2
         text.value = "Please enter the article you would like to present:"
@@ -73,7 +72,6 @@ def main(page: ft.Page):
             size=20, text_align=ft.TextAlign.NONE
         )
     )
-
     global opcija
 
     page.add(
@@ -89,7 +87,7 @@ def main(page: ft.Page):
                     border_radius=10,
                     ink=True,
                     bgcolor=ft.colors.GREY_100,
-                    on_click=zamejajopcijo0,
+                    on_click=zamenjaj_opcijo0,
                 ),
                 ft.Container(
                     content=ft.Text("Script"),
@@ -101,7 +99,7 @@ def main(page: ft.Page):
                     border_radius=10,
                     ink=True,
                     bgcolor=ft.colors.GREY_100,
-                    on_click=zamejajopcijo1,
+                    on_click=zamenjaj_opcijo1,
                 ),
                 ft.Container(
                     content=ft.Text("Article"),
@@ -113,15 +111,13 @@ def main(page: ft.Page):
                     border_radius=10,
                     ink=True,
                     bgcolor=ft.colors.GREY_100,
-                    on_click=zamejajopcijo2,
+                    on_click=zamenjaj_opcijo2,
                 ),
             ],
             alignment=ft.MainAxisAlignment.CENTER,
         ),
     )
-
     page.add(text)
-
 
     global t
     t = ft.Text()
