@@ -1,9 +1,7 @@
 import flet as ft
-import main as mn
 
 t=""
 
-option = 0
 # 0 = topic
 # 1 = script
 # 2 = prov like seminarska -> article
@@ -14,10 +12,7 @@ def main(page: ft.Page):
         t.value = f'{tb1.value}'
         page.update()
         print(t)  #--> kle poslemo t v uno od nika
-        print(option)
         #print(optiontxt)
-        robot = mn.PresentationGenerator(t.value)
-        robot.generate_presentation()
     
     """
     def switch_option(e):
@@ -33,23 +28,56 @@ def main(page: ft.Page):
     text.value = "Please enter the topic you would like to present:"
     text.size = 20
 
+    a = ft.Container(
+                    content=ft.Text("Topic"),
+                    margin=10,
+                    padding=10,
+                    alignment=ft.alignment.center,
+                    width=150,
+                    height=150,
+                    border_radius=10,
+                    ink=True,
+                    bgcolor=ft.colors.GREY_100,
+                    on_click=zamejajopcijo0,
+                )
+    b = ft.Container(
+                    content=ft.Text("Script"),
+                    margin=10,
+                    padding=10,
+                    alignment=ft.alignment.center,
+                    width=150,
+                    height=150,
+                    border_radius=10,
+                    ink=True,
+                    bgcolor=ft.colors.GREY_100,
+                    on_click=zamejajopcijo0,
+                )
+    c = ft.Container(
+                    content=ft.Text("Article"),
+                    margin=10,
+                    padding=10,
+                    alignment=ft.alignment.center,
+                    width=150,
+                    height=150,
+                    border_radius=10,
+                    ink=True,
+                    bgcolor=ft.colors.GREY_100,
+                    on_click=zamejajopcijo2,
+                )
 
     def zamejajopcijo0(e):
-        global option
         text.value = "Please enter the topic you would like to present:"
-        option = 0
+        a.bgcolor = ft.colors.RED_100
         page.update()
     
     def zamejajopcijo1(e):
-        global option
-        option = 1
         text.value = "Please enter the script you would like to present:"
+        a.bgcolor = ft.colors.RED_100
         page.update()
 
     def zamejajopcijo2(e):
-        global option
-        option = 2
         text.value = "Please enter the article you would like to present:"
+        a.bgcolor = ft.colors.RED_100
         page.update()
 
     def izpisi(e):
@@ -79,42 +107,9 @@ def main(page: ft.Page):
     page.add(
         ft.Row(
             [
-                ft.Container(
-                    content=ft.Text("Topic"),
-                    margin=10,
-                    padding=10,
-                    alignment=ft.alignment.center,
-                    width=150,
-                    height=150,
-                    border_radius=10,
-                    ink=True,
-                    bgcolor=ft.colors.GREY_100,
-                    on_click=zamejajopcijo0,
-                ),
-                ft.Container(
-                    content=ft.Text("Script"),
-                    margin=10,
-                    padding=10,
-                    alignment=ft.alignment.center,
-                    width=150,
-                    height=150,
-                    border_radius=10,
-                    ink=True,
-                    bgcolor=ft.colors.GREY_100,
-                    on_click=zamejajopcijo1,
-                ),
-                ft.Container(
-                    content=ft.Text("Article"),
-                    margin=10,
-                    padding=10,
-                    alignment=ft.alignment.center,
-                    width=150,
-                    height=150,
-                    border_radius=10,
-                    ink=True,
-                    bgcolor=ft.colors.GREY_100,
-                    on_click=zamejajopcijo2,
-                ),
+                a,
+                b,
+                c,
             ],
             alignment=ft.MainAxisAlignment.CENTER,
         ),
