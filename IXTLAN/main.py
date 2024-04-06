@@ -141,10 +141,10 @@ class PresentationGenerator:
         if self.background_image_path is None:
             print("No background image provided")
             return
+        destination_path = os.path.join(self.presentation_folder, IMAGE_FOLDER_NAME, "background.png")
         
         if os.path.exists(destination_path):
             os.remove(destination_path)
-        destination_path = os.path.join(self.presentation_folder, IMAGE_FOLDER_NAME, "background.png")
         
         shutil.copy(self.background_image_path, destination_path)
         
