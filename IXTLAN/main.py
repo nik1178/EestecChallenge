@@ -3,7 +3,8 @@ import os
 import io
 import requests
 import shutil
-from PIL import Image, ImageStat
+from PIL import Image, ImageStat, ImageEnhance
+import random
 
 
 API_KEY = open("./API_KEY.txt", "r").read()
@@ -17,16 +18,16 @@ WHITE_FOREGROUND_SETTINGS = "\setbeamercolor{frametitle}{fg=white}\n\setbeamerco
 
 class PresentationGenerator:
     
-    instruction = "You build latex code to make slides for a presentation. You are given the text about a topic, turn it into bullet points, and add images to every slide. Make sure that they are scaled properly. Pretend that the images exist in a local folder called \"./images\", and add them to the code normally. Try to add an image to every slide. Every slide has the same background from the image \"background.png\". Every presentation starts with an opening slide with a title, featuring the authors' names and affiliations. The following slides contain bullet points with the main ideas of the presentation. Make sure you include most of the topics and/or section. The final topic slide is a conclusion slide with a summary of the presentation. The slides should be visually appealing and easy to read. The text should be concise and to the point. The images should be relevant to the text and help illustrate the main ideas. The presentation should be engaging and informative. If possible, add one more slide with references, if those were given in the starting text. The presentation should be professional and well-organized. The true final two slides should be for questions and thank you. WRITE NOTHING BUT THE CODE, NO MATTER WHAT, ONLY GIVE THE CODE. The input text is:"
+    instruction = "You build latex code to make slides for a presentation. You are given the text about a topic, turn it into bullet points, and add images to every slide. Make sure that they are scaled properly. Pretend that the images exist in a local folder called \"./images\", and add them to the code normally. Try to add an image to every slide. Every slide has the same background from the image \"background.png\". Every presentation starts with an opening slide with a title, featuring the authors' names and affiliations. The following slides contain bullet points with the main ideas of the presentation. Make sure you include most of the topics and/or section. The final topic slide is a conclusion slide with a summary of the presentation. The slides should be visually appealing and easy to read. The text should be concise and to the point. The images should be relevant to the text and help illustrate the main ideas. The presentation should be engaging and informative. If possible, add one more slide with references, if those were given in the starting text. The presentation should be professional and well-organized. The true final two slides should be for questions and thank you and they both need images. WRITE NOTHING BUT THE CODE, NO MATTER WHAT, ONLY GIVE THE CODE. The input text is:"
     
     
     
     conversation_messages = []
     conversation_messages.append({"role": "system", "content": instruction},)
     
-    presentation_folder = "presentation"
+    presentation_folder = "presentation" + str(random.randint(0, 100000))
     
-    do_white_text = False
+    # do_white_text = False
         
     client = OpenAI(
         api_key=API_KEY,
@@ -36,29 +37,29 @@ class PresentationGenerator:
         self.input_text = input_text
         self.background_image_path = background_image_path
     
-    def brightness(self, file_path):
+    # def brightness(self, file_path):
         
-        shutil.copy(file_path, "temp.png")
+    #     shutil.copy(file_path, "temp.png")
         
-        im = Image.open("temp.png").convert('L')
-        stat = ImageStat.Stat(im)
+    #     im = Image.open("temp.png").convert('L')
+    #     stat = ImageStat.Stat(im)
         
-        os.remove("temp.png")
+    #     os.remove("temp.png")
         
-        return stat.mean[0]
+    #     return stat.mean[0]
     
-    def set_font_color(self):
-        print("Selecting font color")
-        if self.background_image_path is None:
-            return
+    # def set_font_color(self):
+    #     print("Selecting font color")
+    #     if self.background_image_path is None:
+    #         return
         
-        background_image_path_final = os.path.join(self.presentation_folder, IMAGE_FOLDER_NAME, "background.png")
-        brightness = self.brightness(background_image_path_final)
-        print("Brightness: " + str(brightness))
+    #     background_image_path_final = os.path.join(self.presentation_folder, IMAGE_FOLDER_NAME, "background.png")
+    #     brightness = self.brightness(background_image_path_final)
+    #     print("Brightness: " + str(brightness))
         
-        if brightness < 127:
-            print("The background is dark, so the font color should be white.")
-            self.do_white_text = True
+    #     if brightness < 127:
+    #         print("The background is dark, so the font color should be white.")
+    #         self.do_white_text = True
     
     def generate_latex_code(self):
         print("Generating latex code")
@@ -78,8 +79,7 @@ class PresentationGenerator:
             else:
                 message_text = message_text[3:]
                 
-        if message_text.endswith == "```":
-            message_text = message_text[:-3]
+        message_text = message_text.replace('`', "")
         
         latex_path = os.path.join(self.presentation_folder, LATEX_FILE_NAME)
         if os.path.exists(latex_path):
@@ -151,6 +151,19 @@ class PresentationGenerator:
 
                     handle.write(block)
     
+    def darken_background(self, path):
+        
+        final_background_path = os.path.join(path)
+        
+        img = Image.open(final_background_path).convert("RGB")
+        
+        img_enhancer = ImageEnhance.Brightness(img)
+        enhanced_image = img_enhancer.enhance(0.4)
+        
+        os.remove(path)
+        
+        enhanced_image.save(path)
+    
     def change_background(self):
         print("Changing background")
         if self.background_image_path is None:
@@ -160,16 +173,18 @@ class PresentationGenerator:
         
         if os.path.exists(destination_path):
             os.remove(destination_path)
+            
         
         shutil.copy(self.background_image_path, destination_path)
         
         print("Background changed")
+    
         
     def change_foreground(self):
         print("Changing foreground")
-        if not self.do_white_text:
-            print("No need to change foreground")
-            return
+        # if not self.do_white_text:
+        #     print("No need to change foreground")
+        #     return
         
         latex_path = os.path.join(self.presentation_folder, LATEX_FILE_NAME)
         filedata = ""
@@ -198,7 +213,8 @@ class PresentationGenerator:
         print("Image prompts: " + image_prompts)
         self.generate_images(image_prompts)
         self.change_background()
-        self.set_font_color()
+        # self.set_font_color()
+        self.darken_background(os.path.join(self.presentation_folder, IMAGE_FOLDER_NAME, "background.png"))
         self.change_foreground()
         
         print("Finished generating presentation")
