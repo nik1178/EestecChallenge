@@ -25,22 +25,23 @@ def main(page: ft.Page):
     def submit_click(e):
         global background_image
         t.value = f'{input_request.value}'
+        input_request.value = ""
         page.update()
         print(t)  # --> kle poslemo t v uno od nika
         print(option)
         # poslji prompt, katero opcijo uporabljamo in pot background imagea
-        
-        try:
-            slide_generator = None
-            if len(background_image) < 2 and os.path.exists(background_image):
-                slide_generator = mn.PresentationGenerator(t.value, option)
-            else:
-                slide_generator = mn.PresentationGenerator(t.value, option, background_image_path=background_image)
+        slide_generator = None
+        if len(background_image) < 2 and os.path.exists(background_image):
+            slide_generator = mn.PresentationGenerator(t.value, option)
+        else:
+            slide_generator = mn.PresentationGenerator(t.value, option, background_image_path=background_image)
+        if len(t.value) < 10:
+            warning_banner.open = True
+            page.update()
+        else:
+            success_banner.open = True
+            page.update()
             slide_generator.generate_presentation()
-        except Exception as e:
-            print(e)
-            print("Error while generating presentation")
-            return
 
     def barvaj_gumb(kateri):
         if kateri == 0:
@@ -75,7 +76,7 @@ def main(page: ft.Page):
     def file_selected(event):
         global background_image
         if event and event.files:
-            path = event.files[0].path  # Accessing the file path directly from the event object
+            path = event.files[0].path
             print(path)
             background_image = path
         else:
@@ -94,7 +95,7 @@ def main(page: ft.Page):
     file_picker = ft.FilePicker(on_result=file_selected)
     page.overlay.append(file_picker)
     # gumbi so kontejnerji
-    global b1, b2, b3, background_picker
+    global b1, b2, b3, background_picker, warning_banner, success_banner
     b1 = ft.Container(
         content=ft.Text("Topic"),
         margin=10,
@@ -104,7 +105,7 @@ def main(page: ft.Page):
         height=50,
         border_radius=15,
         ink=True,
-        bgcolor='#bbbbbbbb',
+        bgcolor='#bbffb3b3',
         on_click=lambda e: klik_gumba(e, 0),
     )
 
@@ -135,7 +136,7 @@ def main(page: ft.Page):
     )
 
     background_picker = ft.Container(
-        content=ft.Text("Choose Background image (optional)"),
+        content=ft.Text("Choose background image (optional)"),
         margin=10,
         padding=10,
         alignment=ft.alignment.bottom_left ,
@@ -153,7 +154,31 @@ def main(page: ft.Page):
             alignment=ft.MainAxisAlignment.CENTER,
         ),
     )
-    page.add(text)
+
+    def zapri(e):
+        warning_banner.open = False
+        success_banner.open = False
+        page.update()
+
+    warning_banner = ft.Banner(
+            bgcolor=ft.colors.RED_100,
+            leading=ft.Icon(ft.icons.WARNING_ROUNDED, color=ft.colors.RED, size=40),
+            content=ft.Text(
+                "Warning: Input request must be at least 10 characters long."
+            ),
+            actions=[ft.TextButton("OK", on_click=zapri),],
+    )
+
+    success_banner = ft.Banner(
+            bgcolor=ft.colors.GREEN_100,
+            leading=ft.Icon(ft.icons.CHECK_CIRCLE, color=ft.colors.GREEN, size=40),
+            content=ft.Text(
+                "Please wait a few minutes for the presentation to be generated. Once finished, the folder containing your generated presentation will automatically open"
+            ),
+            actions=[ft.TextButton("OK", on_click=zapri),],
+    )
+
+    page.add(text, warning_banner, success_banner)
     page.update()
 
     global t
