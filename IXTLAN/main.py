@@ -201,6 +201,18 @@ class PresentationGenerator:
             
         print("Foreground changed")
                     
+                    
+    def compile_latex(self):
+        try:
+            path = os.path.join(os.getcwd(), self.presentation_folder)
+            print("Current working directory: {0}".format(os.getcwd()))
+            os.chdir(path)
+            os.system("pdflatex " + LATEX_FILE_NAME)
+            
+            return
+        except Exception as e:
+            print(e)
+            return
     
     def generate_presentation(self):
         
@@ -216,5 +228,7 @@ class PresentationGenerator:
         # self.set_font_color()
         self.darken_background(os.path.join(self.presentation_folder, IMAGE_FOLDER_NAME, "background.png"))
         self.change_foreground()
+        
+        self.compile_latex()
         
         print("Finished generating presentation")
