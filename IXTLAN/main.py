@@ -5,6 +5,7 @@ import requests
 import shutil
 from PIL import Image, ImageStat, ImageEnhance
 import random
+import time
 
 
 API_KEY = open("./API_KEY.txt", "r").read()
@@ -15,17 +16,17 @@ LATEX_FILE_NAME = "presentation.tex"
 
 WHITE_FOREGROUND_SETTINGS = "\setbeamercolor{frametitle}{fg=white}\n\setbeamercolor{title}{fg=white}\n\setbeamercolor{author}{fg=white}\n\setbeamercolor{date}{fg=white}\n\setbeamercolor{normal text}{fg=white}"
 
-
 class PresentationGenerator:
     
-    instruction = "You build latex code to make slides for a presentation. You are given the text about a topic, turn it into bullet points, and add images to every slide. Make sure that they are scaled properly. Pretend that the images exist in a local folder called \"./images\", and add them to the code normally. Try to add an image to every slide. Every slide has the same background from the image \"background.png\". Every presentation starts with an opening slide with a title, featuring the authors' names and affiliations. The following slides contain bullet points with the main ideas of the presentation. Make sure you include most of the topics and/or section. The final topic slide is a conclusion slide with a summary of the presentation. The slides should be visually appealing and easy to read. The text should be concise and to the point. The images should be relevant to the text and help illustrate the main ideas. The presentation should be engaging and informative. If possible, add one more slide with references, if those were given in the starting text. The presentation should be professional and well-organized. The true final two slides should be for questions and thank you and they both need images. WRITE NOTHING BUT THE CODE, NO MATTER WHAT, ONLY GIVE THE CODE. The input text is:"
+    instruction = "You build latex code to make slides for a presentation. You are given the text about a topic, turn it into bullet points, and add images to every slide. Make sure that their width is set to 0.5 and MAKE SURE THE IMAGES ARE CENTERED. Pretend that the images exist in a local folder called \"./images\", and add them to the code normally. Try to add an image to every slide. Every slide has the same background from the image \"background.png\". Every presentation starts with an opening slide with a title, featuring the authors' names and affiliations. The following slides contain bullet points with the main ideas of the presentation. Make sure you include most of the topics and/or section. The final topic slide is a conclusion slide with a summary of the presentation. The slides should be visually appealing and easy to read. The text should be concise and to the point. The images should be relevant to the text and help illustrate the main ideas. The presentation should be engaging and informative. If possible, add one more slide with references, if those were given in the starting text. The presentation should be professional and well-organized. The true final two slides should be for questions and thank you and they both need images. WRITE NOTHING BUT THE CODE, NO MATTER WHAT, ONLY GIVE THE CODE. The input text is:"
     
-    
+    topic_script_instruction = "Generate an aproximetly 200 word slide presentation script about:"
+    file_script_instruction = "Generate an aproximetly 200 word slide presentation script from the presentation code you made."
     
     conversation_messages = []
     conversation_messages.append({"role": "system", "content": instruction},)
     
-    presentation_folder = "presentation" + str(random.randint(0, 100000))
+    presentation_folder = "presentation"
     
     # do_white_text = False
         
@@ -33,8 +34,9 @@ class PresentationGenerator:
         api_key=API_KEY,
     )
     
-    def __init__(self, input_text, background_image_path=None):
+    def __init__(self, input_text, input_type, background_image_path=None):
         self.input_text = input_text
+        self.input_type = input_type
         self.background_image_path = background_image_path
     
     # def brightness(self, file_path):
@@ -60,6 +62,21 @@ class PresentationGenerator:
     #     if brightness < 127:
     #         print("The background is dark, so the font color should be white.")
     #         self.do_white_text = True
+    
+    def generate_script_from_topic(self):
+        print("Generating script from topic")
+        
+        input_message = [{"role": "system", "content": self.topic_script_instruction}]
+        input_message.append({"role": "user", "content": self.input_text})
+        response = self.client.chat.completions.create(
+            model="gpt-4-0125-preview",
+            messages=input_message
+        )
+        
+        print("Script generated from topic")
+        
+        return response.choices[0].message.content
+        
     
     def generate_latex_code(self):
         print("Generating latex code")
@@ -200,6 +217,31 @@ class PresentationGenerator:
             file.write("\n".join(filedata))
             
         print("Foreground changed")
+        
+    def generate_script_from_file(self):
+        print("Generating script from file")
+        
+        self.conversation_messages.append({"role": "system", "content": self.file_script_instruction},)
+        response = self.client.chat.completions.create(
+            model="gpt-4-turbo-preview",
+            messages=self.conversation_messages
+        )
+        
+        message_text = response.choices[0].message.content
+        return message_text
+        
+        
+        print("Script generated from file")
+        
+    def save_script(self, script):
+        print("Saving script")
+        script_path = os.path.join(self.presentation_folder, "script.txt")
+        
+        script_file = open(script_path, "a", errors="ignore")
+        script_file.write(script)
+        script_file.close()
+        
+        print("Script saved")
                     
                     
     def compile_latex(self):
@@ -220,7 +262,13 @@ class PresentationGenerator:
             shutil.rmtree(self.presentation_folder)
         os.makedirs(self.presentation_folder)
         
+        if self.input_type == 0:
+            self.input_text = self.generate_script_from_topic()
+            self.save_script(self.input_text)
+        
         self.generate_latex_code()
+        
+        
         image_prompts = self.generate_image_prompts()
         print("Image prompts: " + image_prompts)
         self.generate_images(image_prompts)
@@ -229,6 +277,10 @@ class PresentationGenerator:
         self.darken_background(os.path.join(self.presentation_folder, IMAGE_FOLDER_NAME, "background.png"))
         self.change_foreground()
         
+        if self.input_type == 2:
+            script = self.generate_script_from_file()
+            self.save_script(script)
+            
         self.compile_latex()
         
         print("Finished generating presentation")
