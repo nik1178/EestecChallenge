@@ -3,6 +3,7 @@ import main as mn
 import os
 
 t = ""
+background_image = ""
 
 option = 0
 # 0 = topic
@@ -11,7 +12,6 @@ option = 0
 
 def main(page: ft.Page):
     # set basic page settings
-    page.window_maximized=True
     page.theme_mode = ft.ThemeMode.LIGHT
     page.title = "SlAIdi"
     page.scroll = "adaptive"
@@ -22,13 +22,13 @@ def main(page: ft.Page):
     text.value = "Please enter the topic you would like to present:"
     text.size = 20
 
-    def text_button_clicked(e):
+    def submit_click(e):
         t.value = f'{input_request.value}'
         page.update()
         print(t)  # --> kle poslemo t v uno od nika
         print(option)
-        # print(optiontxt)
-        slide_generator = mn.PresentationGenerator(t.value, option)
+        # poslji prompt, katero opcijo uporabljamo in pot background imagea
+        slide_generator = mn.PresentationGenerator(t.value, option, background_image)
         slide_generator.generate_presentation()
 
     def barvaj_gumb(kateri):
@@ -60,6 +60,16 @@ def main(page: ft.Page):
         barvaj_gumb(gumb)
         page.update()
 
+    # zapomni si pot do izbrane slike
+    def file_selected(event):
+        global background_image
+        if event and event.files:
+            path = event.files[0].path  # Accessing the file path directly from the event object
+            print(path)
+            background_image = path
+        else:
+            print("No file selected.")
+
     # PAGE TITLE
     page.add(
         ft.Text("Sl", size=50, weight=ft.FontWeight.W_500, 
@@ -70,8 +80,10 @@ def main(page: ft.Page):
             size=20, text_align=ft.TextAlign.NONE
         )
     )
+    file_picker = ft.FilePicker(on_result=file_selected)
+    page.overlay.append(file_picker)
     # gumbi so kontejnerji
-    global b1, b2, b3
+    global b1, b2, b3, background_picker
     b1 = ft.Container(
         content=ft.Text("Topic"),
         margin=10,
@@ -79,9 +91,9 @@ def main(page: ft.Page):
         alignment=ft.alignment.center,
         width=150,
         height=50,
-        border_radius=10,
+        border_radius=15,
         ink=True,
-        bgcolor=ft.Container(bgcolor='#bbbbbbbb'),
+        bgcolor='#bbbbbbbb',
         on_click=lambda e: klik_gumba(e, 0),
     )
 
@@ -92,9 +104,9 @@ def main(page: ft.Page):
         alignment=ft.alignment.center,
         width=150,
         height=50,
-        border_radius=10,
+        border_radius=15,
         ink=True,
-        bgcolor=ft.Container(bgcolor='#bbbbbbbb'),
+        bgcolor='#bbbbbbbb',
         on_click=lambda e: klik_gumba(e, 1),
     )
 
@@ -105,10 +117,23 @@ def main(page: ft.Page):
         alignment=ft.alignment.center,
         width=150,
         height=50,
-        border_radius=10,
-        ink=True,
-        bgcolor=ft.Container(bgcolor='#bbbbbbbb'),
+        border_radius=15,
+        #ink=True,
+        bgcolor='#bbbbbbbb',
         on_click=lambda e: klik_gumba(e, 2),
+    )
+
+    background_picker = ft.Container(
+        content=ft.Text("Choose Background image (optional)"),
+        margin=10,
+        padding=10,
+        alignment=ft.alignment.bottom_left ,
+        width=270,
+        height=40,
+        border_radius=5,
+        ink=True,
+        bgcolor='#bbbbbbbb',
+        on_click=lambda e: file_picker.pick_files(file_type="image"),
     )
     # dodaj gumbe in tekst na stran
     page.add(
@@ -123,8 +148,15 @@ def main(page: ft.Page):
     global t
     t = ft.Text()
     input_request = ft.TextField(label="User input", multiline=True, max_lines=20, max_length=120000)
-    b = ft.ElevatedButton(text="Submit", on_click=text_button_clicked, bgcolor=ft.colors.INDIGO_50)
-    file_picker = ft.FilePicker()
-    page.add(input_request, b, file_picker)
+    submit = ft.ElevatedButton(text="Submit", on_click=submit_click, bgcolor=ft.colors.INDIGO_50)
+    # na klik se odpre okno, ki dovoli samo slike
+    # background_picker = ft.ElevatedButton("Choose Background image (optional)", on_click=lambda _: file_picker.pick_files(file_type="image"))
+    page.add(input_request)
+    page.add(ft.Row(
+            [background_picker],
+            alignment=ft.MainAxisAlignment.START,
+    ))
+    page.add(submit)
+    page.update()
 
 ft.app(target=main)
