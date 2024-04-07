@@ -26,6 +26,8 @@ class PresentationGenerator:
     conversation_messages = []
     conversation_messages.append({"role": "system", "content": instruction},)
     
+    script = ""
+    
     presentation_folder = "presentation"
     
     # do_white_text = False
@@ -98,6 +100,16 @@ class PresentationGenerator:
                 
         message_text = message_text.replace('`', "")
         
+        presentation_name = self.get_presentation_name()
+        
+        print("Folder name: " + presentation_name)
+        
+        self.presentation_folder = presentation_name
+        
+        if os.path.exists(self.presentation_folder):
+            shutil.rmtree(self.presentation_folder)
+        os.makedirs(self.presentation_folder)
+        
         latex_path = os.path.join(self.presentation_folder, LATEX_FILE_NAME)
         if os.path.exists(latex_path):
             os.remove(latex_path)
@@ -107,6 +119,19 @@ class PresentationGenerator:
         code_file.close()
         
         print("Latex code generated")
+    
+    def get_presentation_name(self):
+        
+        conversation_copy = self.conversation_messages.copy()
+        conversation_copy.append({"role": "system", "content": "Answer the next prompt with a very short answer, only giving exactly what is asked for. Do not include any additional information. Do not add any other words. Only give a direct concise answer and dont have any spaces in the answer. Also don't append any file extensions."})
+        conversation_copy.append({"role": "user", "content": "What should be the name of the file for this presentation? "})
+        response = self.client.chat.completions.create(
+            model="gpt-4-0125-preview",
+            messages=conversation_copy
+        )
+        
+        return response.choices[0].message.content
+        
         
     def generate_image_prompts(self):
         print("Generating image prompts")
@@ -191,7 +216,8 @@ class PresentationGenerator:
         if os.path.exists(destination_path):
             os.remove(destination_path)
             
-        
+        print("Background image path: " + self.background_image_path)
+        print("Destination path: " + destination_path)
         shutil.copy(self.background_image_path, destination_path)
         
         print("Background changed")
@@ -259,16 +285,11 @@ class PresentationGenerator:
     
     def generate_presentation(self):
         
-        if os.path.exists(self.presentation_folder):
-            shutil.rmtree(self.presentation_folder)
-        os.makedirs(self.presentation_folder)
-        
         if self.input_type == 0:
             self.input_text = self.generate_script_from_topic()
-            self.save_script(self.input_text)
+            self.script = self.input_text
         
         self.generate_latex_code()
-        
         
         image_prompts = self.generate_image_prompts()
         print("Image prompts: " + image_prompts)
@@ -279,8 +300,10 @@ class PresentationGenerator:
         self.change_foreground()
         
         if self.input_type == 2:
-            script = self.generate_script_from_file()
-            self.save_script(script)
+            self.script = self.generate_script_from_file()
+        
+        if self.input_type == 0 or self.input_type == 2:
+            self.save_script(self.script)
             
         self.compile_latex()
         

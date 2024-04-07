@@ -23,12 +23,18 @@ def main(page: ft.Page):
     text.size = 20
 
     def submit_click(e):
+        global background_image
         t.value = f'{input_request.value}'
         page.update()
         print(t)  # --> kle poslemo t v uno od nika
         print(option)
         # poslji prompt, katero opcijo uporabljamo in pot background imagea
-        slide_generator = mn.PresentationGenerator(t.value, option, background_image_path=background_image)
+        
+        slide_generator = None
+        if len(background_image) < 2 and os.path.exists(background_image):
+            slide_generator = mn.PresentationGenerator(t.value, option)
+        else:
+            slide_generator = mn.PresentationGenerator(t.value, option, background_image_path=background_image)
         slide_generator.generate_presentation()
 
     def barvaj_gumb(kateri):
