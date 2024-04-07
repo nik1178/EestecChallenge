@@ -7,21 +7,26 @@ from PIL import Image, ImageStat
 
 
 API_KEY = open("./API_KEY.txt", "r").read()
-instructions_get_image_prompts = "Now list all the images in the folder /images that you used, except for, and give me the prompts for each one. These prompts should be good for image generating AI models. Make sure that the prompts are super accurate and descriptive, so that even if someone doesn't know the context at all, they would still understand what you want. Also make sure to specify in what style the image should be created. And you'll get a raise if they are good. GIVE NOTHING BUT THE OUTPUT IN THE SPECIFIED FORMAT, DO NOT WRITE ANYTHING ELSE. The output should be in the following format: ImageName1: {prompt1} \\n ImageName2: {prompt2} \\n ..."
+instructions_get_image_prompts = "Now list all the images in the folder /images that you used, except for, and give me the prompts for each one. These prompts should be good for image generating AI models. Make sure that the prompts are super accurate and descriptive, so that even if someone doesn't know the context at all, they would still understand what you want. Also make sure to specify in what style the image should be created. Also generated a \"background.png\" image. And you'll get a raise if they are good. GIVE NOTHING BUT THE OUTPUT IN THE SPECIFIED FORMAT, DO NOT WRITE ANYTHING ELSE. The output should be in the following format: ImageName1: {prompt1} \\nImageName2: {prompt2} \\n..."
 
 IMAGE_FOLDER_NAME = "images"
 LATEX_FILE_NAME = "presentation.tex"
 
+WHITE_FOREGROUND_SETTINGS = "\setbeamercolor{frametitle}{fg=white}\n\setbeamercolor{title}{fg=white}\n\setbeamercolor{author}{fg=white}\n\setbeamercolor{date}{fg=white}\n\setbeamercolor{normal text}{fg=white}"
+
 
 class PresentationGenerator:
     
-    instruction = "You build latex code (use utf-8 encoding) to make slides for a presentation. You are given the text about a topic, turn it into bullet points, and add images to the slides. Make sure that they are scaled properly. Pretend that the images exist in a local folder called \"./images\", and add them to the code normally. Try to add an image to every slide. Every slide has the same background from the image \"background.png\". Every presentation starts with an opening slide with a title, featuring the authors' names and affiliations. The following slides contain bullet points with the main ideas of the presentation. Make sure you include most of the topics and/or section. The final topic slide is a conclusion slide with a summary of the presentation. The slides should be visually appealing and easy to read. The text should be concise and to the point. The images should be relevant to the text and help illustrate the main ideas. The presentation should be engaging and informative. If possible, add one more slide with references, if those were given in the starting text. The presentation should be professional and well-organized. The true final two slides should be for questions and thank you. WRITE NOTHING BUT THE CODE, NO MATTER WHAT, ONLY GIVE THE CODE. The input text is:"
+    instruction = "You build latex code to make slides for a presentation. You are given the text about a topic, turn it into bullet points, and add images to every slide. Make sure that they are scaled properly. Pretend that the images exist in a local folder called \"./images\", and add them to the code normally. Try to add an image to every slide. Every slide has the same background from the image \"background.png\". Every presentation starts with an opening slide with a title, featuring the authors' names and affiliations. The following slides contain bullet points with the main ideas of the presentation. Make sure you include most of the topics and/or section. The final topic slide is a conclusion slide with a summary of the presentation. The slides should be visually appealing and easy to read. The text should be concise and to the point. The images should be relevant to the text and help illustrate the main ideas. The presentation should be engaging and informative. If possible, add one more slide with references, if those were given in the starting text. The presentation should be professional and well-organized. The true final two slides should be for questions and thank you. WRITE NOTHING BUT THE CODE, NO MATTER WHAT, ONLY GIVE THE CODE. The input text is:"
+    
     
     
     conversation_messages = []
     conversation_messages.append({"role": "system", "content": instruction},)
     
     presentation_folder = "presentation"
+    
+    do_white_text = False
         
     client = OpenAI(
         api_key=API_KEY,
@@ -31,24 +36,29 @@ class PresentationGenerator:
         self.input_text = input_text
         self.background_image_path = background_image_path
     
-    def brightness(self, im_file):
-        im = Image.open(im_file).convert('L')
+    def brightness(self, file_path):
+        
+        shutil.copy(file_path, "temp.png")
+        
+        im = Image.open("temp.png").convert('L')
         stat = ImageStat.Stat(im)
+        
+        os.remove("temp.png")
+        
         return stat.mean[0]
     
     def set_font_color(self):
+        print("Selecting font color")
         if self.background_image_path is None:
             return
         
-        brightness = self.brightness(self.background_image_path)
+        background_image_path_final = os.path.join(self.presentation_folder, IMAGE_FOLDER_NAME, "background.png")
+        brightness = self.brightness(background_image_path_final)
         print("Brightness: " + str(brightness))
         
         if brightness < 127:
             print("The background is dark, so the font color should be white.")
-            split = self.instruction.split(".")
-            split.insert(1, "The background is dark, so the font color on all the slides should be white.")
-            self.instruction = ".".join(split)
-            
+            self.do_white_text = True
     
     def generate_latex_code(self):
         print("Generating latex code")
@@ -67,6 +77,7 @@ class PresentationGenerator:
                 message_text = message_text[8:]
             else:
                 message_text = message_text[3:]
+                
         if message_text.endswith == "```":
             message_text = message_text[:-3]
         
@@ -77,6 +88,8 @@ class PresentationGenerator:
         code_file =  open(latex_path, "a", errors="ignore")
         code_file.write(message_text)
         code_file.close()
+        
+        print("Latex code generated")
         
     def generate_image_prompts(self):
         print("Generating image prompts")
@@ -91,12 +104,14 @@ class PresentationGenerator:
 
     def generate_images(self, image_prompts):
         print("Generating images")
-        buff = io.StringIO(image_prompts)
-
         folder_path = os.path.join(self.presentation_folder, "images")
         if os.path.exists(folder_path):
             shutil.rmtree(folder_path)
         os.makedirs(folder_path)
+        
+        buff = io.StringIO(image_prompts)
+
+        
 
         for line in buff:
             if len(line) < 2:
@@ -109,7 +124,7 @@ class PresentationGenerator:
             if prompt[-1] == '}':
                 prompt = prompt[:-1]
             
-            
+            print("Generating image: " + image_name)
             print("Current prompt: " + prompt)
             
             response = self.client.images.generate(
@@ -148,6 +163,29 @@ class PresentationGenerator:
         
         shutil.copy(self.background_image_path, destination_path)
         
+        print("Background changed")
+        
+    def change_foreground(self):
+        print("Changing foreground")
+        if not self.do_white_text:
+            print("No need to change foreground")
+            return
+        
+        latex_path = os.path.join(self.presentation_folder, LATEX_FILE_NAME)
+        filedata = ""
+        with open(latex_path, 'r') as file:
+            filedata = file.read()
+        
+        os.remove(latex_path)
+        
+        filedata = filedata.split("\n")
+        filedata.insert(2, WHITE_FOREGROUND_SETTINGS)
+        
+        with open(latex_path, "w") as file:
+            file.write("\n".join(filedata))
+            
+        print("Foreground changed")
+                    
     
     def generate_presentation(self):
         
@@ -155,8 +193,12 @@ class PresentationGenerator:
             shutil.rmtree(self.presentation_folder)
         os.makedirs(self.presentation_folder)
         
-        self.set_font_color()
         self.generate_latex_code()
         image_prompts = self.generate_image_prompts()
+        print("Image prompts: " + image_prompts)
         self.generate_images(image_prompts)
         self.change_background()
+        self.set_font_color()
+        self.change_foreground()
+        
+        print("Finished generating presentation")

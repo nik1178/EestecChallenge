@@ -7,7 +7,7 @@ client = OpenAI(
     api_key=API_KEY,
 )
 
-prompt_text = "An infographic showing two clusters of points in a 3D space, labeled 'X' and 'Y', with arrows indicating movement from cluster X to Y, representing the concept of rotating and moving a solid object from one position to another. The style should be clear, with a scientific and instructional look, suitable for a mathematical presentation."
+prompt_text = "Very simple single line dumbell drawings, for website background, beige background. Very spaced apart, a lot of space, not a lot of objects."
 
 response = client.images.generate(
     model="dall-e-3",
@@ -21,7 +21,7 @@ image_url = response.data[0].url
 print(image_url)
 
 
-with open('images/pic1.jpg', 'wb') as handle:
+with open('pic1.jpg', 'wb') as handle:
     response = requests.get(image_url, stream=True)
 
     if not response.ok:
