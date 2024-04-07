@@ -104,7 +104,7 @@ def main(page: ft.Page):
         height=50,
         border_radius=15,
         ink=True,
-        bgcolor='#bbbbbbbb',
+        bgcolor='#bbffb3b3',
         on_click=lambda e: klik_gumba(e, 0),
     )
 
@@ -135,7 +135,7 @@ def main(page: ft.Page):
     )
 
     background_picker = ft.Container(
-        content=ft.Text("Choose Background image (optional)"),
+        content=ft.Text("Choose background image (optional)"),
         margin=10,
         padding=10,
         alignment=ft.alignment.bottom_left ,
