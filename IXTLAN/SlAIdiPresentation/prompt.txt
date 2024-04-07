@@ -1,0 +1,29 @@
+Title Slide: Predstavitev: SlAIdi
+
+Slide 1: 
+Dober dan, moje ime je Masa, to sta pa Tian in Nik.
+Danes vam bomo predstavili naso AI resitev SlAIdi, ki namesto Vas avtomatsko ustvari prosojnice za predstavitve, in prav tako tudi skript, po katerem naj bi govorili.
+
+Slide 2:
+Kako deluje?
+Nas program preko API klicev povzame vas vhodni tekst, ce je ta preprost poziv, ali skript ki ste ga napisali vnaprej, prav tako pa sprejema tudi cele seminarske naloge. Preprosto vnesemo kaj zelimo, in cez par minut nam odpre imenik s PDF prosojnicami, Latex kodo in TXT skriptom.
+*An image of the UI*
+
+Slide 3:
+Zakaj ta program?
+Z njim lahko zelo pospesimo postopek predstavljanja, saj ne rabimo paziti na vsak manjsi detajl in se mnogokrat ponavljati pri deluje.
+Predstavitve so pogosta potreba prav tako pri solskem delu, kakor v podtjetjih.
+
+Slide 4:
+Prilagodljivost
+Prednost programa je ta, da nas ne omeji v en rezultat. Za zacetek lahko uporabnik noter vpise svojo idejo, in dobi prvotno verzijo skripta.
+Ce mu ta ni cisto vsec, ga lahko popravi, in celotnega ponovno poda v program, in ven dobi rezultat, s katerim je zadovoljen.
+Poleg tega dobi med datotekami tudi kodo, da lahko zamenja slike in spremeni besedisce, ce je to res potrebno.
+
+Slide 5:
+Zaupnost in veljavnost
+Kako pa vemo, da lahko zaupamo, da bo ta tehnologija naredil dober rezultat? Kot ste mogoce pricakovali, je ta celotna predstavitev bila narejena s pomocjo nasega programa. Niso uporabili nobenega drugega orodja poleg nasega.
+
+Slide 6:
+Izboljsave
+Seveda pa program se ni popoln. Slike dela trenutno samo preko "image generatorjev". Za matematicne modele in podobno te niso perfektni. Seveda je pa program sprogramiran zelo modularno, in bi lahko preprosto dodali druge knjiznice, ki bi jih AI ucinkovito uporabil za boljse rezultate.
