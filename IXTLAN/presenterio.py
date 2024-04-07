@@ -16,7 +16,7 @@ def main(page: ft.Page):
         print(t)  #--> kle poslemo t v uno od nika
         print(option)
         #print(optiontxt)
-        robot = mn.PresentationGenerator(t.value)
+        robot = mn.PresentationGenerator(t.value, background_image_path="background.png")
         robot.generate_presentation()
     
     """
