@@ -1,0 +1,2 @@
+
+AI program, ki avtomatsko naredi prosojnice za predstavitev, skupaj s skriptom. Uporabnik rabi samo vpisati temo, ali svoj vnaprej narjen skript, ali celo seminarsko nalogo. Deluje preko API klicev, potrebuje zelo malo truda, in omogoa nekaj prilagodljivosti rezultatov. Hkrati omogoca vnasanje rezultatov nazaj v program in tako lahko dobimo boljsi rezultat.

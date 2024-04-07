@@ -30,12 +30,17 @@ def main(page: ft.Page):
         print(option)
         # poslji prompt, katero opcijo uporabljamo in pot background imagea
         
-        slide_generator = None
-        if len(background_image) < 2 and os.path.exists(background_image):
-            slide_generator = mn.PresentationGenerator(t.value, option)
-        else:
-            slide_generator = mn.PresentationGenerator(t.value, option, background_image_path=background_image)
-        slide_generator.generate_presentation()
+        try:
+            slide_generator = None
+            if len(background_image) < 2 and os.path.exists(background_image):
+                slide_generator = mn.PresentationGenerator(t.value, option)
+            else:
+                slide_generator = mn.PresentationGenerator(t.value, option, background_image_path=background_image)
+            slide_generator.generate_presentation()
+        except Exception as e:
+            print(e)
+            print("Error while generating presentation")
+            return
 
     def barvaj_gumb(kateri):
         if kateri == 0:

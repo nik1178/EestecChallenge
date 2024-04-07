@@ -195,9 +195,7 @@ class PresentationGenerator:
     
     def darken_background(self, path):
         
-        final_background_path = os.path.join(path)
-        
-        img = Image.open(final_background_path).convert("RGB")
+        img = Image.open(path).convert("RGB")
         
         img_enhancer = ImageEnhance.Brightness(img)
         enhanced_image = img_enhancer.enhance(0.4)
@@ -208,7 +206,7 @@ class PresentationGenerator:
     
     def change_background(self):
         print("Changing background")
-        if self.background_image_path is None:
+        if self.background_image_path is None or len(self.background_image_path) < 2 or not os.path.exists(self.background_image_path):
             print("No background image provided")
             return
         destination_path = os.path.join(self.presentation_folder, IMAGE_FOLDER_NAME, "background.png")
@@ -283,7 +281,20 @@ class PresentationGenerator:
             print(e)
             return
     
+    def save_prompt(self, prompt):
+        print("Saving prompt")
+        prompt_path = os.path.join(self.presentation_folder, "prompt.txt")
+        
+        prompt_file = open(prompt_path, "a", errors="ignore")
+        prompt_file.write(prompt)
+        prompt_file.close()
+        
+        print("Prompt saved")
+    
     def generate_presentation(self):
+        
+        prompt_copy = self.input_text
+        
         
         if self.input_type == 0:
             self.input_text = self.generate_script_from_topic()
@@ -304,6 +315,7 @@ class PresentationGenerator:
         
         if self.input_type == 0 or self.input_type == 2:
             self.save_script(self.script)
+        self.save_prompt(prompt_copy)
             
         self.compile_latex()
         

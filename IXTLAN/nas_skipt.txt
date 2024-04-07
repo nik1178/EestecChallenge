@@ -5,3 +5,10 @@
 Izboljsave:
 Lahko bi dodali podporo za generiranje v bolj estestskih in prilagodljivih programih za generiranje predstavitev iz kode.
 Poleg tega bi lahko dodali tudi druge nacine prikazovanje idej poleg samo slik. Ce bi zeleli diagrame, bi uporabili programski jezik mermaid in podobno.
+
+Dvomi:
+A lahko res naredi tako dobro kot clovek.
+Guess what, nasa cela predstavitev je bila narjena s tem
+
+Slide 10:
+An image of a shocked emoji
