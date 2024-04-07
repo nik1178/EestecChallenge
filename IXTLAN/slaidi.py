@@ -1,5 +1,6 @@
 import flet as ft
 import main as mn
+import os
 
 t = ""
 
@@ -9,7 +10,13 @@ option = 0
 # 2 = prov like seminarska -> article
 
 def main(page: ft.Page):
-    page.theme_mode = "light"
+    # set basic page settings
+    page.window_maximized=True
+    page.theme_mode = ft.ThemeMode.LIGHT
+    page.title = "SlAIdi"
+    page.scroll = "adaptive"
+    page.vertical_alignment = ft.MainAxisAlignment.CENTER
+    page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
 
     def text_button_clicked(e):
         t.value = f'{tb1.value}'
@@ -17,22 +24,22 @@ def main(page: ft.Page):
         print(t)  # --> kle poslemo t v uno od nika
         print(option)
         # print(optiontxt)
-        robot = mn.PresentationGenerator(t.value)
-        robot.generate_presentation()
+        slide_generator = mn.PresentationGenerator(t.value)
+        slide_generator.generate_presentation()
 
     def barvaj_gumb(kateri):
         if kateri == 0:
-            b1.bgcolor = '#cc33ccff'
-            b2.bgcolor = '#aaaaaaaa'
-            b3.bgcolor = '#aaaaaaaa'
+            b1.bgcolor = '#bbb3ecff'
+            b2.bgcolor = '#bbaaaaaa'
+            b3.bgcolor = '#bbaaaaaa'
         elif kateri == 1:
-            b1.bgcolor = '#aaaaaaaa'
-            b2.bgcolor = '#cc33ccff'
-            b3.bgcolor = '#aaaaaaaa'
+            b1.bgcolor = '#bbaaaaaa'
+            b2.bgcolor = '#bbb3ecff'
+            b3.bgcolor = '#bbaaaaaa'
         else:
-            b1.bgcolor = '#aaaaaaaa'
-            b2.bgcolor = '#aaaaaaaa'
-            b3.bgcolor = '#cc33ccff'
+            b1.bgcolor = '#bbaaaaaa'
+            b2.bgcolor = '#bbaaaaaa'
+            b3.bgcolor = '#bbb3ecff'
 
     text = ft.Text()
     text.value = "Please enter the topic you would like to present:"
@@ -50,8 +57,7 @@ def main(page: ft.Page):
         option = 1
         text.value = "Please enter the script you would like to present:"
         barvaj_gumb(1)
-        page.update()
-        
+        page.update() 
 
     def zamenjaj_opcijo2(e):
         global option
@@ -59,16 +65,6 @@ def main(page: ft.Page):
         text.value = "Please enter the article you would like to present:"
         barvaj_gumb(2)
         page.update()     
-
-    def izpisi(e):
-        global text_to_present
-        return text_to_present
-
-    page.title = "Text custom styles"
-    page.scroll = "adaptive"
-
-    page.vertical_alignment = ft.MainAxisAlignment.CENTER
-    page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
 
     # PAGE TITLE
     page.add(
@@ -81,19 +77,18 @@ def main(page: ft.Page):
         )
     )
     global opcija
-
+    # gumbi so kontejnerji
     global b1, b2, b3
-
     b1 = ft.Container(
         content=ft.Text("Topic"),
         margin=10,
         padding=10,
         alignment=ft.alignment.center,
         width=150,
-        height=150,
+        height=50,
         border_radius=10,
         ink=True,
-        bgcolor=ft.Container(bgcolor='#aaaaaaaa'),
+        bgcolor=ft.Container(bgcolor='#bbaaaaaa'),
         on_click=zamenjaj_opcijo0,
     )
 
@@ -103,10 +98,10 @@ def main(page: ft.Page):
         padding=10,
         alignment=ft.alignment.center,
         width=150,
-        height=150,
+        height=50,
         border_radius=10,
         ink=True,
-        bgcolor=ft.Container(bgcolor='#aaaaaaaa'),
+        bgcolor=ft.Container(bgcolor='#bbaaaaaa'),
         on_click=zamenjaj_opcijo1,
     )
 
@@ -116,7 +111,7 @@ def main(page: ft.Page):
         padding=10,
         alignment=ft.alignment.center,
         width=150,
-        height=150,
+        height=50,
         border_radius=10,
         ink=True,
         bgcolor=ft.Container(bgcolor='#aaaaaaa'),
@@ -136,6 +131,8 @@ def main(page: ft.Page):
     t = ft.Text()
     tb1 = ft.TextField(label="User input", multiline=True, max_lines=20, max_length=120000)
     b = ft.ElevatedButton(text="Submit", on_click=text_button_clicked, bgcolor=ft.colors.INDIGO_50)
-    page.add(tb1, b)
+    file_picker = ft.FilePicker()
+    page.add(tb1, b, file_picker)
+
 
 ft.app(target=main)
