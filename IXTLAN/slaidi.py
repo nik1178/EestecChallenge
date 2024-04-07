@@ -28,7 +28,7 @@ def main(page: ft.Page):
         print(t)  # --> kle poslemo t v uno od nika
         print(option)
         # poslji prompt, katero opcijo uporabljamo in pot background imagea
-        slide_generator = mn.PresentationGenerator(t.value, option, background_image)
+        slide_generator = mn.PresentationGenerator(t.value, option, background_image_path=background_image)
         slide_generator.generate_presentation()
 
     def barvaj_gumb(kateri):
